@@ -25,7 +25,7 @@ class Calculator:
         """ Get the number of nodes out of blocks
         """
         start_bn = start_bn or 0
-        end_bn = end_bn or self.aide.bub.block_number
+        end_bn = end_bn or self.aide.eth.block_number
         if end_bn - start_bn > 1000:
             warnings.warn('too many blocks to analyze, it will be a long wait')
 
@@ -58,7 +58,7 @@ class Calculator:
         period_blocks = blocks[period_type]
 
         if not block_number:
-            block_number = self.aide.bub.block_number
+            block_number = self.aide.eth.block_number
 
         period = math.ceil(block_number / period_blocks) or 1
         start_block, end_block = self.get_period_ends(period, period_type)

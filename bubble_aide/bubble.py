@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from bubble.datastructures import AttributeDict
+from web3.datastructures import AttributeDict
 
 from bubble_aide.abc.module import PrecompileContract
 from bubble_aide.utils.wrapper import contract_transaction

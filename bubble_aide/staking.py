@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from bubble.datastructures import AttributeDict
+from web3.datastructures import AttributeDict
 
 from bubble_aide.abc.module import PrecompileContract
 from bubble_aide.utils.wrapper import contract_transaction
@@ -41,7 +41,7 @@ class Staking(PrecompileContract):
                        ):
 
         if not benefit_address:
-            benefit_account = self.aide.bub.account.from_key(private_key) if private_key else self.aide.account
+            benefit_account = self.aide.eth.account.from_key(private_key) if private_key else self.aide.account
             if not benefit_account:
                 raise ValueError('the benefit address cannot be empty')
 

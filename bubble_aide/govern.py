@@ -1,7 +1,7 @@
 from time import time
 from typing import TYPE_CHECKING, Union, Literal
 
-from bubble.datastructures import AttributeDict
+from web3.datastructures import AttributeDict
 from eth_typing import HexStr, NodeID, BlockIdentifier
 
 from bubble_aide.abc.module import PrecompileContract
@@ -160,7 +160,7 @@ class Govern(PrecompileContract):
     def get_newest_proposal(self, proposal_type: Literal[1, 2, 3, 4] = None):
         """ Obtain the latest activation status proposal information
         """
-        block_number = self.aide.web3.bub.block_number
+        block_number = self.aide.web3.eth.block_number
         proposal_list = self.proposal_list(proposal_type)
 
         proposals = [proposal for proposal in proposal_list if proposal.EndVotingBlock > block_number]

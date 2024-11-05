@@ -20,7 +20,7 @@ def contract_transaction(fid=None, default_txn=None):
 
             # Fill in the from address to prevent contract transactions from failing to verify the address when estimating gas
             if not txn.get('from'):
-                account = self.aide.bub.account.from_key(private_key) if private_key else self.aide.account
+                account = self.aide.eth.account.from_key(private_key) if private_key else self.aide.account
                 if account:
                     txn['from'] = account.address
 

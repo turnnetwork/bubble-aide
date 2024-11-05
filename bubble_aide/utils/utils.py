@@ -6,12 +6,11 @@ import warnings
 from os.path import abspath
 from typing import cast
 
-from bubble import Web3, HTTPProvider, WebsocketProvider, IPCProvider
-from bubble._utils.threads import Timeout
-from bubble.datastructures import AttributeDict
-from bubble.exceptions import ContractLogicError
-from bubble.middleware import node_poa_middleware
-from bubble.types import RLPEventData
+from web3 import Web3, HTTPProvider, WebsocketProvider, IPCProvider
+from web3._utils.threads import Timeout
+from web3.datastructures import AttributeDict
+from web3.exceptions import ContractLogicError
+from web3.middleware import geth_poa_middleware
 
 from gql import Client
 from gql.transport.aiohttp import AIOHTTPTransport

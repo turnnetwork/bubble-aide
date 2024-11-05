@@ -1,6 +1,8 @@
 # MATCH
 **/*cache*
-**/*debug*
+**/*Adapt to ethdebug*
+**/script*
+**/test_gravity*
 **/*build*
 **/*dist*
 **/*venv*

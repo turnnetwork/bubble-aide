@@ -2,29 +2,17 @@ import time
 from typing import Literal
 
 import rlp
-from bubble_aide.temp_prikey import TempPrikey
+
 from hexbytes import HexBytes
 from loguru import logger
-from bubble.inner_contract import InnerContractEvent
-from bubble.main import get_default_modules
+
+from web3.main import get_default_modules
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from eth_utils import to_checksum_address, combomethod
 
-from bubble_aide.restricting import Restricting
 from bubble_aide.statics.economic import Economic
-from bubble_aide.statics.calculator import Calculator
 from bubble_aide.statics.contract import Contract
-from bubble_aide.staking import Staking
-from bubble_aide.stakingL2 import StakingL2
-from bubble_aide.bubble import Bubble
-from bubble_aide.bubbleL2 import BubbleL2
-from bubble_aide.delegate import Delegate
-from bubble_aide.slashing import Slashing
-from bubble_aide.reward import Reward
-from bubble_aide.govern import Govern
-from bubble_aide.statics.graphqls import Graphql
-from bubble_aide.statics.constant import Constant
 from bubble_aide.utils.utils import get_web3, get_economic, precompile_contracts
 from eth_account._utils.signing import to_standard_signature_bytes
 from eth_hash.auto import keccak
@@ -58,29 +46,27 @@ class Aide:
         """ Set up web related modules
         """
         self.web3 = get_web3(self.uri)
-        self.bub = self.web3.bub
-        self.txpool = self.web3.node.txpool
-        self.personal = self.web3.node.personal
-        self.admin = self.web3.node.admin
-        self.debug = self.web3.debug
+        self.eth = self.web3.eth
+        self.txpool = self.web3.geth.txpool
+        self.personal = self.web3.geth.personal
+        self.admin = self.web3.geth.admin
+        # self.debug = self.web3.geth.debug
 
     def __init_modules__(self):
         """ Set bubble built-in contract related modules
         """
-        self.economic = get_economic(self)
-        self.constant = Constant(self)
-        self.graphql = Graphql(f'{self.uri}/bubble/graphql')
-        self.calculator = Calculator(self)
-        self.restricting = Restricting(self)
-        self.staking = Staking(self)
-        self.stakingL2 = StakingL2(self)
-        self.bubble = Bubble(self)
-        self.bubbleL2 = BubbleL2(self)
-        self.delegate = Delegate(self)
-        self.slashing = Slashing(self)
-        self.reward = Reward(self)
-        self.govern = Govern(self)
-        self.tempPrikey = TempPrikey(self)
+        # self.economic = get_economic(self)
+        # self.constant = Constant(self)
+        # self.graphql = Graphql(f'{self.uri}/bubble/graphql')
+        # self.calculator = Calculator(self)
+        # self.restricting = Restricting(self)
+        # self.staking = Staking(self)
+        # self.bubble = Bubble(self)
+        # self.delegate = Delegate(self)
+        # self.slashing = Slashing(self)
+        # self.reward = Reward(self)
+        # self.govern = Govern(self)
+        # self.tempPrikey = TempPrikey(self)
 
     def set_account(self, account: LocalAccount):
         """ Set default account for sending transactions
@@ -122,10 +108,10 @@ class Aide:
         """ Send transfer transaction
         """
         transfer_txn = {
-            "chainId": self.bub.chain_id,
+            "chainId": self.eth.chain_id,
             "to": to_address,
             "gas": 21000,
-            "gasPrice": self.bub.gas_price,
+            "gasPrice": self.eth.gas_price,
             "value": amount,
             "data": '',
         }
@@ -138,7 +124,7 @@ class Aide:
     def get_balance(self, address, block_identifier=None):
         """ Query the balance of free amount
         """
-        return self.bub.get_balance(address, block_identifier)
+        return self.eth.get_balance(address, block_identifier)
 
     def init_contract(self,
                       abi,
@@ -154,7 +140,7 @@ class Aide:
                         private_key=None,
                         *init_args,
                         **init_kwargs):
-        contract = self.bub.contract(abi=abi, bytecode=bytecode)
+        contract = self.eth.contract(abi=abi, bytecode=bytecode)
         txn = contract.constructor(*init_args, **init_kwargs).build_transaction(txn)
         receipt = self.send_transaction(txn, result_type='receipt', private_key=private_key)
         address = receipt.get('contractAddress')
@@ -167,12 +153,12 @@ class Aide:
     def wait_block(self, to_block, time_out=None):
         """ Waiting block high
         """
-        current_block = self.bub.block_number
+        current_block = self.eth.block_number
         time_out = time_out or (to_block - current_block) * 3
 
         for i in range(time_out):
             time.sleep(1)
-            current_block = self.bub.block_number
+            current_block = self.eth.block_number
 
             if i % 10 == 0:
                 logger.info(f'waiting block: {current_block} -> {to_block}')
@@ -200,7 +186,7 @@ class Aide:
         """
         result_type = result_type or self.result_type
 
-        account = self.bub.account.from_key(private_key) if private_key else self.account
+        account = self.eth.account.from_key(private_key) if private_key else self.account
         if not account:
             raise ValueError('no private key for signature')
 
@@ -208,17 +194,17 @@ class Aide:
             txn['from'] = account.address
             txn.pop('gas')
 
-        txn['gas'] = txn.get('gas') or self.bub.estimate_gas(txn)
-        txn['gasPrice'] = txn.get('gasPrice') or self.bub.gas_price
-        txn['nonce'] = txn.get('nonce') or self.bub.get_transaction_count(account.address)
-        txn['chainId'] = txn.get('chainId') or self.bub.chain_id
+        txn['gas'] = txn.get('gas') or self.eth.estimate_gas(txn)
+        txn['gasPrice'] = txn.get('gasPrice') or self.eth.gas_price
+        txn['nonce'] = txn.get('nonce') or self.eth.get_transaction_count(account.address)
+        txn['chainId'] = txn.get('chainId') or self.eth.chain_id
 
         # Return to transaction body
         if result_type == "txn":
             return txn
 
-        signed_txn = self.bub.account.sign_transaction(txn, account.key)
-        tx_hash = self.bub.send_raw_transaction(signed_txn.rawTransaction)
+        signed_txn = self.eth.account.sign_transaction(txn, account.key)
+        tx_hash = self.eth.send_raw_transaction(signed_txn.rawTransaction)
 
         # Return transaction hash
         if result_type == 'hash':
@@ -240,7 +226,7 @@ class Aide:
     def get_transaction_receipt(self, tx_hash, timeout=20):
         """ 发送签名交易，并根据结果类型获取交易结果
         """
-        receipt = self.bub.wait_for_transaction_receipt(tx_hash, timeout=timeout)
+        receipt = self.eth.wait_for_transaction_receipt(tx_hash, timeout=timeout)
         if type(receipt) is bytes:
             receipt = receipt.decode('utf-8')
 
@@ -253,7 +239,7 @@ class Aide:
     def ec_recover(self, block_identifier):
         """ Using the Keccak method to extract the signature node public key of the block
         """
-        block = self.web3.bub.get_block(block_identifier)
+        block = self.web3.eth.get_block(block_identifier)
 
         sign = block.extraData[32:]
         extra = block.extraData[:32]

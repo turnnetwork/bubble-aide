@@ -3,8 +3,8 @@ import functools
 from functools import wraps, partial
 from typing import TYPE_CHECKING
 
-from bubble._utils.abi import filter_by_name
-from bubble.contract.contract import ContractFunction
+from web3._utils.abi import filter_by_name
+from web3.contract.contract import ContractFunction
 
 from bubble_aide.abc.module import PrecompileContract
 
@@ -24,7 +24,7 @@ class Contract:
         self.abi = abi
         self.bytecode = bytecode
         self.address = address
-        self.origin = self.aide.bub.contract(address=self.address, abi=self.abi, bytecode=self.bytecode)
+        self.origin = self.aide.eth.contract(address=self.address, abi=self.abi, bytecode=self.bytecode)
         self.functions = self.origin.functions
         self.events = self.origin.events
         self._set_functions(self.origin.functions)
@@ -102,7 +102,7 @@ def contract_transaction(func):
         else:
             txn = {}
         if not txn.get('from'):
-            account = self.aide.bub.account.from_key(private_key) if private_key else self.aide.account
+            account = self.aide.eth.account.from_key(private_key) if private_key else self.aide.account
             if account:
                 txn['from'] = account.address
 

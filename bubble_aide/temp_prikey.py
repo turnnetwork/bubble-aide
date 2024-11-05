@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from bubble.types import InnerFunction
+from web3.types import InnerFunction
 
 from bubble_aide.abc.module import PrecompileContract
 from bubble_aide.utils.wrapper import contract_transaction
